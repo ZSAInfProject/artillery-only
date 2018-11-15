@@ -2,5 +2,11 @@
 name = "artillery-only"
 version = "0.1.0"
 authors = ["JJendryka <jendryka.j@gmail.com>"]
+edition='2018'
+
+[lib]
+name = "artillery_only"
 
 [dependencies]
+enet = "0.2.0"
+serde = "1.0.80"
