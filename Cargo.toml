@@ -1,0 +1,6 @@
+[package]
+name = "artillery-only"
+version = "0.1.0"
+authors = ["JJendryka <jendryka.j@gmail.com>"]
+
+[dependencies]
