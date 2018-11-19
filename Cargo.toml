@@ -10,3 +10,5 @@ name = "artillery_only"
 [dependencies]
 enet = "0.2.0"
 serde = "1.0.80"
+piston2d-graphics = "0.28.0"
+bit-vec = "0.5.0"
