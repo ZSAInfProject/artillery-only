@@ -37,4 +37,39 @@ impl Network {
         };
         Ok(network)
     }
+
+    pub fn update(&mut self){
+        match self.host.service(1000).expect("service failed") {
+            Some(Event::Connect(_)) => println!("new connection!"),
+            Some(Event::Disconnect(..)) => println!("disconnect!"),
+            Some(Event::Receive {
+                channel_id,
+                ref packet,
+                ..
+            }) => println!("got packet on channel {}, content: '{}'", channel_id,
+                         std::str::from_utf8(packet.data()).unwrap()),
+            _ => (),
+        }
+    }
+
+    pub fn send_message(&mut self, message: &[u8]){
+        for mut peer in self.host.peers() {
+            let packet = Packet::new(message, PacketMode::ReliableSequenced).unwrap();
+            peer.send_packet(
+            packet,
+            1,
+            );
+        }
+    }
+
+    pub fn connect(&mut self){
+        self.host.connect(&Address::new(Ipv4Addr::LOCALHOST, 9001), 10, 0)
+            .expect("connect failed");
+        loop {
+            match self.host.service(1000).expect("service failed") {
+                Some(Event::Connect(_)) => break,
+                _ => continue,
+            }
+        }
+    }
 }
