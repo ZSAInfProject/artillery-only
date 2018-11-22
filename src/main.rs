@@ -1,30 +1,31 @@
 extern crate enet;
 extern crate serde;
 use artillery_only::structs::Map;
-use std::env;
+use std::{env, process};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let mut args = env::args().skip(1);
+    let run_as = args.next().unwrap_or_else(|| {
+        println!("Usage: 'artillery-only client/server/both'");
+        process::exit(1);
+    });
+
+    let args: Vec<String> = args.collect();
 
     println!("Artillery Only Game");
 
-    if args.len() == 1 {
-        println!("Usage: 'artillery-only client/server'");
-        return ();
-    }
-
-    match args[1].as_ref() {
-        "client" => run_client(&args[1..].to_vec()),
-        "server" => run_server(&args[1..].to_vec()),
+    match run_as.as_ref() {
+        "client" => run_client(&args),
+        "server" => run_server(&args),
         "both" => {
-            let arg_ref = args[1..].to_vec();
-            let server = std::thread::spawn(move || run_server(&arg_ref));
-            run_client(&args[1..].to_vec());
+            let server_args = args.clone();
+            let server = std::thread::spawn(move || run_server(&server_args));
+            run_client(&args);
             server.join().unwrap();
         }
         _ => {
             println!("Invalid argument!");
-            return ();
+            process::exit(1);
         }
     }
 }
