@@ -1,12 +1,23 @@
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate enet;
+extern crate bincode;
+
+use std::{thread, time};
+
 mod network;
 
 pub fn run(){
-    let server = false;
-    if(server){
+    let server = true;
+    if server {
         let mut network = network::Network::new(true).expect("test");
+        network.connect();
         loop {
-            network.send_message(b"String");
+            thread::sleep(time::Duration::from_millis(10));
             network.update();
+            let message = network::message::Message::Ping{num: 5};
+            network.send_message(message);
         }
     }
     else{
@@ -14,6 +25,8 @@ pub fn run(){
         network.connect();
         loop {
             network.update();
+            let message = network::message::Message::Ping{num: 10};
+            network.send_message(message);
         }
     }
 }

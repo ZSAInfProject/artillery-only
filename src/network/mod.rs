@@ -1,6 +1,11 @@
+
+pub mod message;
+
 use std::error::Error;
 use enet::*;
 use std::net::Ipv4Addr;
+use self::message::*;
+use bincode::{deserialize, serialize};
 
 pub struct Network {
     enet: Enet,
@@ -39,22 +44,28 @@ impl Network {
     }
 
     pub fn update(&mut self){
-        match self.host.service(1000).expect("service failed") {
+        match self.host.service(0).expect("service failed") {
             Some(Event::Connect(_)) => println!("new connection!"),
             Some(Event::Disconnect(..)) => println!("disconnect!"),
             Some(Event::Receive {
                 channel_id,
                 ref packet,
                 ..
-            }) => println!("got packet on channel {}, content: '{}'", channel_id,
-                         std::str::from_utf8(packet.data()).unwrap()),
+            }) => {
+                let decoded: Message = deserialize(&packet.data()).unwrap();
+                match decoded {
+                    Message::Ping{num} => println!("Data: {}", num),
+                    _ => (),
+                }
+            }
             _ => (),
         }
     }
 
-    pub fn send_message(&mut self, message: &[u8]){
+    pub fn send_message(&mut self, message: Message){
+        let encoded: Vec<u8> = serialize(&message).unwrap();
         for mut peer in self.host.peers() {
-            let packet = Packet::new(message, PacketMode::ReliableSequenced).unwrap();
+            let packet = Packet::new(&encoded, PacketMode::ReliableSequenced).unwrap();
             peer.send_packet(
             packet,
             1,
