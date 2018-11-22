@@ -1,9 +1,11 @@
 use bit_vec::BitVec;
+use std::collections::HashMap;
+
 struct Map {
     width: usize,
     height: usize,
     terrain: BitVec,
-    tanks: Vec<Tank>,
+    tanks: HashMap<u32, Tank>,
 }
 
 impl Map {
@@ -16,7 +18,7 @@ impl Map {
             width,
             height,
             terrain,
-            tanks: Vec::new(),
+            tanks: HashMap::new(),
         }
     }
 
