@@ -1,6 +1,4 @@
-extern crate enet;
-extern crate serde;
-use artillery_only::structs::Map;
+use artillery_only::{self, structs::Map};
 use std::{env, process};
 
 fn main() {
@@ -32,13 +30,7 @@ fn main() {
 
 fn run_client(args: &Vec<String>) {
     println!("client");
-    let mut map = Map::new(1000, 1000);
-
-    //TODO: Connecting and setting up rendering
-
-    loop {
-        // update() and render()
-    }
+    artillery_only::run_client();
 }
 
 fn run_server(args: &Vec<String>) {
