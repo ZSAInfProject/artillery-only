@@ -1,7 +1,7 @@
 use bit_vec::BitVec;
 use std::collections::HashMap;
 
-struct Map {
+pub struct Map {
     width: usize,
     height: usize,
     terrain: BitVec,
@@ -9,7 +9,7 @@ struct Map {
 }
 
 impl Map {
-    fn new(width: usize, height: usize) -> Map {
+    pub fn new(width: usize, height: usize) -> Map {
         let mut terrain = BitVec::from_elem(width * height, false);
         for i in 0..(width * height / 2) {
             terrain.set(i, true);
