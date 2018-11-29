@@ -5,12 +5,16 @@ use opengl_graphics::{GlGraphics, OpenGL};
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
+use std::collections::HashMap;
 
 use self::structs::Map;
 
 struct App {
     gl: GlGraphics,
     map: Map,
+    is_my_turn: bool,
+    angle: f32,
+    keys: HashMap<piston::input::Key, bool>,
 }
 
 impl App {
@@ -29,6 +33,26 @@ impl App {
             rectangle(GROUND, ground, c.transform, gl);
         });
     }
+
+    fn get_key(&mut self, key: piston::input::Key) -> bool {
+        *self.keys.entry(key).or_insert(false)
+    }
+
+    fn update(&mut self, args: UpdateArgs) {
+        println!("{:}", self.get_key(piston::input::Key::Left));
+    }
+
+    fn press(&mut self, button: piston::input::Button) {
+        if let piston::input::Button::Keyboard(b) = button {
+            self.keys.insert(b, true);
+        }
+    }
+
+    fn release(&mut self, button: piston::input::Button) {
+        if let piston::input::Button::Keyboard(b) = button {
+            self.keys.insert(b, false);
+        }
+    }
 }
 
 pub fn run_client() {
@@ -43,12 +67,18 @@ pub fn run_client() {
     let mut app = App {
         gl: GlGraphics::new(opengl),
         map: Map::new(512, 512),
+        is_my_turn: false,
+        angle: 0f32,
+        keys: HashMap::new(),
     };
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
-        if let Some(r) = e.render_args() {
-            app.render(r);
-        }
+        e.render(|args| app.render(*args));
+
+        e.update(|args| app.update(*args));
+
+        e.press(|button| app.press(button));
+        e.release(|button| app.release(button));
     }
 }
