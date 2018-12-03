@@ -13,11 +13,13 @@ pub fn run(){
     if server {
         let mut network = network::Network::new(true).expect("test");
         network.connect();
+        let mut counter = 0;
         loop {
-            thread::sleep(time::Duration::from_millis(10));
+            thread::sleep(time::Duration::from_millis(1000));
             network.update();
-            let message = network::message::Message::Ping{num: 5};
+            let message = network::message::Message::Ping{num: counter};
             network.send_message(message);
+            counter += 1;
         }
     }
     else{
