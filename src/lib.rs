@@ -1,3 +1,12 @@
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate enet;
+extern crate bincode;
+
+use std::{thread, time};
+
+mod network;
 pub mod structs;
 
 use glutin_window::GlutinWindow as Window;
@@ -7,6 +16,8 @@ use piston::input::*;
 use piston::window::WindowSettings;
 
 use self::structs::Map;
+use self::network::PeerData;
+use self::network::message::*;
 
 struct App {
     gl: GlGraphics,
