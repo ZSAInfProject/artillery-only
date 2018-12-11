@@ -1,18 +1,22 @@
 use bit_vec::BitVec;
 use std::collections::HashMap;
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Map {
     width: usize,
     height: usize,
-    terrain: BitVec,
+    terrain: Vec<bool>,
     tanks: HashMap<u32, Tank>,
 }
 
 impl Map {
     pub fn new(width: usize, height: usize) -> Map {
-        let mut terrain = BitVec::from_elem(width * height, false);
+        let mut terrain: Vec<bool> = Vec::new();
+        for i in 0..(width * height) {
+            terrain.push(false);
+        }
         for i in 0..(width * height / 2) {
-            terrain.set(i, true);
+            terrain.push(true);
         }
         Map {
             width,
@@ -23,13 +27,18 @@ impl Map {
     }
 
     fn get_tile(self, x: usize, y: usize) -> Option<bool> {
-        return self.terrain.get(y * self.width + x);
+        let value = self.terrain.get(y * self.width + x);
+        if let Some(val) = value {
+            return Some(*val);
+        }
+        return None;
     }
     fn set_tile(mut self, is_solid: bool, x: usize, y: usize) {
-        self.terrain.set(y * self.width + x, is_solid);
+        self.terrain[y * self.width + x] =  is_solid;
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Tank {
     position: Point,
     cannon_angle: f32,
@@ -46,4 +55,5 @@ impl Tank {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 struct Point(f32, f32);
