@@ -63,11 +63,3 @@ pub fn run_client() {
         }
     }
 }
-
-pub fn client_handle_message(peerData: &PeerData, message: Message){
-
-}
-
-pub fn server_handle_message(peerData: &PeerData, message: Message){
-
-}

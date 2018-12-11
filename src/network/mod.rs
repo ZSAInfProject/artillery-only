@@ -7,6 +7,7 @@ use std::net::Ipv4Addr;
 use self::message::*;
 use bincode::{deserialize, serialize};
 
+#[derive(Debug, Clone)]
 pub struct PeerData{
     initialized: bool,
     nick: Option<String>,
@@ -76,7 +77,8 @@ impl Network {
         Ok(network)
     }
 
-    pub fn update(&mut self){
+    pub fn update(&mut self) -> Vec<(PeerData, Message)> {
+        let mut result: Vec<(PeerData, Message)> = Vec::new();
         match self.host.service(0).expect("service failed") {
             Some(Event::Connect(ref mut peer)) => {
                 println!("new connection!");
@@ -105,18 +107,14 @@ impl Network {
                     Message::Ping{num} => println!("Data: {}", num),
                     _ => {
                         if let Some(data) = sender.data(){
-                            if(self.is_server){
-                                crate::server_handle_message(data, decoded);
-                            }
-                            else{
-                                crate::client_handle_message(data, decoded);
-                            }
+                            result.push((data.clone(), decoded));
                         }
                     },
                 }
             }
             _ => (),
         }
+        result
     }
 
     pub fn send_message(&mut self, message: Message){
