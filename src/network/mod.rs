@@ -7,7 +7,7 @@ use std::net::Ipv4Addr;
 use self::message::*;
 use bincode::{deserialize, serialize};
 
-struct PeerData{
+pub struct PeerData{
     initialized: bool,
     nick: Option<String>,
     id: Option<u32>,
@@ -40,6 +40,7 @@ pub struct Network {
     enet: Enet,
     host: Host<PeerData>,
     lastID: u32,
+    is_server: bool,
 }
 
 impl Network {
@@ -69,7 +70,8 @@ impl Network {
                 )
                 .expect("could not create host")
             },
-            enet
+            enet,
+            is_server,
         };
         Ok(network)
     }
@@ -101,7 +103,16 @@ impl Network {
                         }
                     }
                     Message::Ping{num} => println!("Data: {}", num),
-                    _ => (),
+                    _ => {
+                        if let Some(data) = sender.data(){
+                            if(self.is_server){
+                                crate::server_handle_message(data, decoded);
+                            }
+                            else{
+                                crate::client_handle_message(data, decoded);
+                            }
+                        }
+                    },
                 }
             }
             _ => (),

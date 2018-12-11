@@ -16,6 +16,8 @@ use piston::input::*;
 use piston::window::WindowSettings;
 
 use self::structs::Map;
+use self::network::PeerData;
+use self::network::message::*;
 
 struct App {
     gl: GlGraphics,
@@ -60,4 +62,12 @@ pub fn run_client() {
             app.render(r);
         }
     }
+}
+
+pub fn client_handle_message(peerData: &PeerData, message: Message){
+
+}
+
+pub fn server_handle_message(peerData: &PeerData, message: Message){
+
 }
