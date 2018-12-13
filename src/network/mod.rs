@@ -1,35 +1,34 @@
-
 pub mod message;
 
-use std::error::Error;
-use enet::*;
-use std::net::Ipv4Addr;
 use self::message::*;
 use bincode::{deserialize, serialize};
+use enet::*;
+use std::error::Error;
+use std::net::Ipv4Addr;
 
 #[derive(Debug, Clone)]
-pub struct PeerData{
+pub struct PeerData {
     initialized: bool,
     nick: Option<String>,
     id: Option<u32>,
     is_server: bool,
 }
 
-impl PeerData{
+impl PeerData {
     pub fn new() -> PeerData {
-        PeerData{
+        PeerData {
             initialized: false,
             nick: None,
             id: None,
             is_server: false,
         }
     }
-    pub fn initialize(&mut self, nick: String, id:u32){
+    pub fn initialize(&mut self, nick: String, id: u32) {
         self.initialized = true;
         self.nick = Some(nick);
         self.id = Some(id);
     }
-    pub fn server_initialize(&mut self){
+    pub fn server_initialize(&mut self) {
         self.initialized = true;
         self.nick = None;
         self.id = None;
@@ -47,10 +46,9 @@ pub struct Network {
 impl Network {
     pub fn new(is_server: bool) -> Result<Network, Box<dyn Error>> {
         let enet = Enet::new().expect("Could not initialize ENet");
-        let network = Network{
+        let network = Network {
             lastID: 0,
-            host: 
-            if is_server {
+            host: if is_server {
                 let local_addr = Address::new(Ipv4Addr::LOCALHOST, 9001);
                 enet.create_host::<PeerData>(
                     Some(&local_addr),
@@ -60,8 +58,7 @@ impl Network {
                     BandwidthLimit::Unlimited,
                 )
                 .expect("gkkgk")
-            }
-            else{
+            } else {
                 enet.create_host::<PeerData>(
                     None,
                     10,
@@ -84,7 +81,11 @@ impl Network {
                 println!("new connection!");
                 peer.set_data(Some(PeerData::new()));
             }
-            Some(Event::Disconnect(..)) => println!("disconnect!"),
+            Some(Event::Disconnect(ref peer, ..)) => {
+                if let Some(data) = peer.data() {
+                    result.push((data.clone(), Message::Disconnect));
+                }
+            }
             Some(Event::Receive {
                 channel_id,
                 ref mut sender,
@@ -92,24 +93,24 @@ impl Network {
                 ..
             }) => {
                 let decoded: Message = deserialize(&packet.data()).unwrap();
-                match decoded {
-                    Message::Initialize{nick} => {
-                        if let Some(data) = sender.data_mut(){
-                            data.initialize(nick, 1);
-                            if let Some(nick) = &data.nick{
+                match &decoded {
+                    Message::Initialize { nick } => {
+                        if let Some(data) = sender.data_mut() {
+                            data.initialize(nick.to_string(), 1);
+                            if let Some(nick) = &data.nick {
                                 println!("{} connected!", nick);
                             }
-                        }
-                        else{
+                            result.push((data.clone(), decoded));
+                        } else {
                             sender.disconnect(0);
                         }
                     }
-                    Message::Ping{num} => println!("Data: {}", num),
+                    Message::Ping { num } => println!("Data: {}", num),
                     _ => {
-                        if let Some(data) = sender.data(){
+                        if let Some(data) = sender.data() {
                             result.push((data.clone(), decoded));
                         }
-                    },
+                    }
                 }
             }
             _ => (),
@@ -117,23 +118,21 @@ impl Network {
         result
     }
 
-    pub fn send_message(&mut self, message: Message){
+    pub fn send_message(&mut self, message: Message) {
         let encoded: Vec<u8> = serialize(&message).unwrap();
         for mut peer in self.host.peers() {
             if let Some(data) = peer.data() {
-                if(data.initialized){
+                if (data.initialized) {
                     let packet = Packet::new(&encoded, PacketMode::ReliableSequenced).unwrap();
-                    peer.send_packet(
-                    packet,
-                    1,
-                    );
+                    peer.send_packet(packet, 1);
                 }
             }
         }
     }
 
-    pub fn connect(&mut self){
-        self.host.connect(&Address::new(Ipv4Addr::LOCALHOST, 9001), 10, 0)
+    pub fn connect(&mut self) {
+        self.host
+            .connect(&Address::new(Ipv4Addr::LOCALHOST, 9001), 10, 0)
             .expect("connect failed");
         loop {
             match self.host.service(1000).expect("service failed") {
@@ -143,11 +142,13 @@ impl Network {
                         data.server_initialize();
                     }
                     break;
-                },
+                }
                 _ => continue,
             }
         }
-        let message = Message::Initialize{nick: "Omega".to_string()};
+        let message = Message::Initialize {
+            nick: "Omega".to_string(),
+        };
         self.send_message(message);
     }
 }

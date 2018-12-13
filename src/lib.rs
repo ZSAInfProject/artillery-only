@@ -1,8 +1,8 @@
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate enet;
 extern crate bincode;
+extern crate enet;
 
 use std::{thread, time};
 
@@ -15,16 +15,17 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 
-use self::structs::Map;
-use self::network::PeerData;
 use self::network::message::*;
+use self::network::Network;
+use self::network::PeerData;
+use self::structs::Map;
 
-struct App {
+struct Client {
     gl: GlGraphics,
     map: Map,
 }
 
-impl App {
+impl Client {
     fn render(&mut self, args: RenderArgs) {
         use graphics::*;
 
@@ -42,7 +43,7 @@ impl App {
     }
 }
 
-pub fn run_client() {
+pub fn run_client(ip: String, port: i32) {
     let opengl = OpenGL::V3_2;
 
     let mut window: Window = WindowSettings::new("spinning-square", (512, 512))
@@ -51,7 +52,7 @@ pub fn run_client() {
         .build()
         .unwrap();
 
-    let mut app = App {
+    let mut client = Client {
         gl: GlGraphics::new(opengl),
         map: Map::new(512, 512),
     };
@@ -59,7 +60,44 @@ pub fn run_client() {
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
-            app.render(r);
+            client.render(r);
         }
+    }
+}
+
+struct Server {
+    map: Map,
+    network: Network,
+}
+
+impl Server {
+    fn lobby(&mut self, player_count: i32) {
+        let mut count = 0;
+        while count < player_count {
+            let mut msgs = self.network.update();
+            while let Some((peer, msg)) = msgs.pop() {
+                match msg {
+                    Message::Initialize { nick } => count += 1,
+                    Message::Disconnect => count -= 1,
+                    _ => {}
+                }
+            }
+        }
+    }
+    fn calculate(&mut self) {}
+    fn send(&mut self) {}
+    fn recive(&mut self) {}
+}
+
+pub fn run_server(ip: String, port: i32, player_count: i32) {
+    let mut server = Server {
+        map: Map::new(512, 512),
+        network: Network::new(true).expect("Network for server not created"),
+    };
+    server.lobby(player_count);
+    loop {
+        server.send();
+        server.recive();
+        server.calculate();
     }
 }
