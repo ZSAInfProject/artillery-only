@@ -29,16 +29,14 @@ fn main() {
 }
 
 fn run_client(args: &Vec<String>) {
-    println!("client");
-    artillery_only::run_client();
+    artillery_only::run_client(args[0].clone(), args[1].parse().unwrap());
 }
 
 fn run_server(args: &Vec<String>) {
     let mut map = Map::new(1000, 1000);
-
-    //TODO: Connecting and setting up rendering
-
-    loop {
-        // update() and render()
-    }
+    artillery_only::run_server(
+        args[0].clone(),
+        args[1].parse().unwrap(),
+        args[2].parse().unwrap(),
+    );
 }

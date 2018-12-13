@@ -1,7 +1,7 @@
 use bit_vec::BitVec;
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Map {
     width: usize,
     height: usize,
@@ -34,11 +34,11 @@ impl Map {
         return None;
     }
     fn set_tile(mut self, is_solid: bool, x: usize, y: usize) {
-        self.terrain[y * self.width + x] =  is_solid;
+        self.terrain[y * self.width + x] = is_solid;
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tank {
     position: Point,
     cannon_angle: f32,
@@ -55,5 +55,5 @@ impl Tank {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Point(f32, f32);
