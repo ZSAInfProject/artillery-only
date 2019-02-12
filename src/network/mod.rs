@@ -130,9 +130,9 @@ impl Network {
         }
     }
 
-    pub fn connect(&mut self) {
+    pub fn connect(&mut self, ip: Ipv4Addr, port: u16) {
         self.host
-            .connect(&Address::new(Ipv4Addr::LOCALHOST, 9001), 10, 0)
+            .connect(&Address::new(ip, port), 10, 0)
             .expect("connect failed");
         loop {
             match self.host.service(1000).expect("service failed") {
