@@ -66,9 +66,9 @@ impl Server {
         let mut count = 0;
         while count < self.config.game.player_count {
             let mut msgs = self.network.update();
-            while let Some((peer, msg)) = msgs.pop() {
+            while let Some((_, msg)) = msgs.pop() {
                 match msg {
-                    Message::Initialize { nick } => count += 1,
+                    Message::Initialize { .. } => count += 1,
                     Message::Disconnect => count -= 1,
                     _ => {}
                 }

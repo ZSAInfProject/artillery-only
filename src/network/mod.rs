@@ -39,14 +39,14 @@ impl PeerData {
 pub struct Network {
     enet: Enet,
     host: Host<PeerData>,
-    lastID: u32,
+    last_id: u32,
     is_server: bool,
 }
 
 impl Network {
     pub fn new(is_server: bool, enet: Enet) -> Result<Network, Box<dyn Error>> {
         let network = Network {
-            lastID: 0,
+            last_id: 0,
             host: if is_server {
                 let local_addr = Address::new(Ipv4Addr::LOCALHOST, 9001);
                 enet.create_host::<PeerData>(
@@ -86,7 +86,6 @@ impl Network {
                 }
             }
             Some(Event::Receive {
-                channel_id,
                 ref mut sender,
                 ref packet,
                 ..
@@ -121,9 +120,10 @@ impl Network {
         let encoded: Vec<u8> = serialize(&message).unwrap();
         for mut peer in self.host.peers() {
             if let Some(data) = peer.data() {
-                if (data.initialized) {
+                if data.initialized {
                     let packet = Packet::new(&encoded, PacketMode::ReliableSequenced).unwrap();
-                    peer.send_packet(packet, 1);
+                    peer.send_packet(packet, 1)
+                        .expect("error sending the packet");
                 }
             }
         }
