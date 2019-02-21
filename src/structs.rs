@@ -1,4 +1,3 @@
-use bit_vec::BitVec;
 use opengl_graphics::GlGraphics;
 use piston::input::RenderArgs;
 use std::collections::HashMap;
@@ -14,10 +13,10 @@ pub struct Map {
 impl Map {
     pub fn new(width: usize, height: usize) -> Map {
         let mut terrain: Vec<bool> = Vec::new();
-        for i in 0..(width * height) {
+        for _ in 0..(width * height) {
             terrain.push(false);
         }
-        for i in 0..(width * height / 2) {
+        for _ in 0..(width * height / 2) {
             terrain.push(true);
         }
         Map {
