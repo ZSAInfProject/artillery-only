@@ -1,4 +1,6 @@
 use bit_vec::BitVec;
+use opengl_graphics::GlGraphics;
+use piston::input::RenderArgs;
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -35,6 +37,20 @@ impl Map {
     }
     fn set_tile(mut self, is_solid: bool, x: usize, y: usize) {
         self.terrain[y * self.width + x] = is_solid;
+    }
+
+    pub fn draw(&self, args: &RenderArgs, gl: &mut GlGraphics) {
+        use graphics::*;
+
+        const BLUE: [f32; 4] = [72.0 / 255.0, 185.0 / 255.0, 219.0 / 255.0, 1.0];
+        const GROUND: [f32; 4] = [127.0 / 255.0, 55.0 / 255.0, 14.0 / 255.0, 1.0];
+
+        let ground: types::Rectangle = [0.0, 256.0, 512.0, 256.0];
+
+        gl.draw(args.viewport(), |c, gl| {
+            clear(BLUE, gl);
+            rectangle(GROUND, ground, c.transform, gl);
+        });
     }
 }
 

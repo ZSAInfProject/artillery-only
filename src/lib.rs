@@ -1,8 +1,7 @@
 #[macro_use]
 extern crate serde_derive;
-use std::env::Args;
-use std::net::Ipv4Addr;
-use std::process;
+
+use std::thread::{self, JoinHandle};
 
 mod network;
 pub mod structs;
@@ -15,7 +14,6 @@ use piston::window::WindowSettings;
 
 use self::network::message::*;
 use self::network::Network;
-use self::network::PeerData;
 use self::structs::Map;
 
 mod config;
@@ -29,23 +27,11 @@ struct Client {
 
 impl Client {
     fn render(&mut self, args: RenderArgs) {
-        use graphics::*;
-
-        const BLUE: [f32; 4] = [72.0 / 255.0, 185.0 / 255.0, 219.0 / 255.0, 1.0];
-
-        const GROUND: [f32; 4] = [127.0 / 255.0, 55.0 / 255.0, 14.0 / 255.0, 1.0];
-
-        let ground: types::Rectangle = [0.0, 256.0, 512.0, 256.0];
-
-        self.gl.draw(args.viewport(), |c, gl| {
-            clear(BLUE, gl);
-
-            rectangle(GROUND, ground, c.transform, gl);
-        });
+        self.map.draw(&args, &mut self.gl);
     }
 }
 
-pub fn run_client(config: ClientConfig) {
+pub fn run_client() {
     let opengl = OpenGL::V3_2;
 
     let mut window: Window = WindowSettings::new("Artillery only", (512, 512))
