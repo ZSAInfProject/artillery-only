@@ -44,8 +44,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(is_server: bool) -> Result<Network, Box<dyn Error>> {
-        let enet = Enet::new().expect("Could not initialize ENet");
+    pub fn new(is_server: bool, enet: Enet) -> Result<Network, Box<dyn Error>> {
         let network = Network {
             lastID: 0,
             host: if is_server {
