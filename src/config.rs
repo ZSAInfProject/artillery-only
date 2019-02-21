@@ -1,113 +1,107 @@
-use std::env::Args;
-use std::error::Error;
-use std::fmt;
-use std::net::AddrParseError;
-use std::num::ParseIntError;
-use std::process;
+use config;
+use std::net::Ipv4Addr;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
+struct NetworkConfig {
+    host: Ipv4Addr,
+    port: u16,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct GameConfig {
     pub player_count: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct ServerConfig {
-    network_config: enet::Address,
-    pub game_config: GameConfig,
+    network: NetworkConfig,
+    pub game: GameConfig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct ClientConfig {
-    network_config: enet::Address,
+    network: NetworkConfig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct Config {
-    pub server_config: Option<ServerConfig>,
-    pub client_config: Option<ClientConfig>,
-}
-
-#[derive(Debug)]
-pub enum ConfigParseError {
-    LaunchModeError,
-    NumParseError(ParseIntError),
-    IpParseError(AddrParseError),
-}
-
-impl Error for ConfigParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        use ConfigParseError::*;
-        match self {
-            LaunchModeError => None,
-            NumParseError(e) => Some(e),
-            IpParseError(e) => Some(e),
-        }
-    }
-}
-
-impl From<ParseIntError> for ConfigParseError {
-    fn from(e: ParseIntError) -> ConfigParseError {
-        ConfigParseError::NumParseError(e)
-    }
-}
-
-impl From<AddrParseError> for ConfigParseError {
-    fn from(e: AddrParseError) -> ConfigParseError {
-        ConfigParseError::IpParseError(e)
-    }
-}
-
-impl fmt::Display for ConfigParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ConfigParseError::*;
-        match *self {
-            LaunchModeError => write!(f, "Invalid launch mode. Valid modes: [client|server|both]"),
-            NumParseError(ref error) => error.fmt(f),
-            IpParseError(ref error) => error.fmt(f),
-        }
-    }
+    pub server: Option<ServerConfig>,
+    pub client: Option<ClientConfig>,
 }
 
 impl Config {
-    pub fn new(args: Args) -> Result<Config, ConfigParseError> {
-        let mut config = Config {
-            server_config: None,
-            client_config: None,
-        };
-
+    pub fn new<T: Iterator<Item = String>>(args: T) -> Result<Self, config::ConfigError> {
+        let mut s = config::Config::new();
         let mut args = args.skip(1);
-        let run_as = args.next().unwrap_or_else(|| {
-            println!("Usage: 'artillery-only client/server/both'");
-            process::exit(1);
-        });
+        s.merge(config::File::with_name("config/default.json"))
+            .unwrap();
 
-        let host = args.next().unwrap().parse()?;
-        let port = args.next().unwrap().parse()?;
+        let mut s: Result<Config, config::ConfigError> = s.try_into();
 
-        let network_config = enet::Address::new(host, port);
-
-        let player_count = args.next().unwrap().parse()?;
-        let game_config = GameConfig { player_count };
-
-        let server_config = ServerConfig {
-            network_config: network_config.clone(),
-            game_config,
-        };
-
-        let client_config = ClientConfig {
-            network_config: network_config.clone(),
-        };
-
-        match run_as.as_ref() {
-            "client" => config.client_config = Some(client_config),
-            "server" => config.server_config = Some(server_config),
-            "both" => {
-                config.client_config = Some(client_config);
-                config.server_config = Some(server_config);
+        if let Ok(ref mut s) = s {
+            if let Some(run_as) = args.next() {
+                match run_as.as_ref() {
+                    "server" => {
+                        s.client = None;
+                    }
+                    "client" => {
+                        s.server = None;
+                    }
+                    _ => (),
+                }
             }
-            _ => return Err(ConfigParseError::LaunchModeError),
         }
 
-        Ok(config)
+        s
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // Had to use assert_ne! instead of assert_eq! because in asserts pattern matching doesnt work
+
+    #[test]
+    fn both_launch_mode() {
+        let args = vec!["program_name".to_owned(), "both".to_owned()].into_iter();
+
+        let config = Config::new(args).unwrap();
+        let (server, client) = (config.server, config.client);
+
+        assert_ne!(server, None);
+        assert_ne!(client, None);
+    }
+
+    #[test]
+    fn client_launch_mode() {
+        let args = vec!["program_name".to_owned(), "client".to_owned()].into_iter();
+
+        let config = Config::new(args).unwrap();
+        let (server, client) = (config.server, config.client);
+
+        assert_eq!(server, None);
+        assert_ne!(client, None);
+    }
+
+    #[test]
+    fn server_launch_mode() {
+        let args = vec!["program_name".to_owned(), "server".to_owned()].into_iter();
+
+        let config = Config::new(args).unwrap();
+        let (server, client) = (config.server, config.client);
+
+        assert_ne!(server, None);
+        assert_eq!(client, None);
+    }
+
+    #[test]
+    fn unspecified_launch_mode() {
+        let args = vec!["program_name".to_owned()].into_iter();
+
+        let config = Config::new(args).unwrap();
+        let (server, client) = (config.server, config.client);
+
+        assert_ne!(server, None);
+        assert_ne!(client, None);
     }
 }

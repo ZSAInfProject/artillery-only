@@ -19,7 +19,7 @@ use self::network::PeerData;
 use self::structs::Map;
 
 mod config;
-pub use config::{ClientConfig, Config, ServerConfig};
+pub use crate::config::{ClientConfig, Config, ServerConfig};
 
 struct Client {
     gl: GlGraphics,
@@ -77,7 +77,7 @@ struct Server {
 impl Server {
     fn lobby(&mut self) {
         let mut count = 0;
-        while count < self.config.game_config.player_count {
+        while count < self.config.game.player_count {
             let mut msgs = self.network.update();
             while let Some((peer, msg)) = msgs.pop() {
                 match msg {
@@ -110,12 +110,12 @@ pub fn run_server(server_config: ServerConfig) {
 pub fn run(config: Config) {
     println!("{:#?}", config);
 
-    let (client_config, server_config) = (config.client_config, config.server_config);
+    let (client, server) = (config.client, config.server);
 
-    if let Some(client_config) = client_config {
+    if let Some(client_config) = client {
         run_client(client_config);
     }
-    if let Some(server_config) = server_config {
+    if let Some(server_config) = server {
         run_server(server_config);
     }
 }
