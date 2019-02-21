@@ -48,7 +48,7 @@ impl Client {
 pub fn run_client(config: ClientConfig) {
     let opengl = OpenGL::V3_2;
 
-    let mut window: Window = WindowSettings::new("spinning-square", (512, 512))
+    let mut window: Window = WindowSettings::new("Artillery only", (512, 512))
         .opengl(opengl)
         .exit_on_esc(true)
         .build()
