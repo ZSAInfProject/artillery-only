@@ -1,5 +1,6 @@
 use opengl_graphics::GlGraphics;
 use piston::input::RenderArgs;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

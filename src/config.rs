@@ -1,4 +1,4 @@
-use config;
+use serde::Deserialize;
 use std::net::Ipv4Addr;
 
 #[derive(Debug, Deserialize, PartialEq)]
