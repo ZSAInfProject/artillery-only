@@ -97,11 +97,20 @@ pub fn run(config: Config) {
     println!("{:#?}", config);
 
     let (client, server) = (config.client, config.server);
+    let mut client_thread: Option<JoinHandle<_>> = None;
+    let mut server_thread: Option<JoinHandle<_>> = None;
 
-    if let Some(client_config) = client {
-        run_client(client_config);
+    if let Some(_) = client {
+        client_thread = Some(thread::spawn(move || run_client()));
     }
     if let Some(server_config) = server {
-        run_server(server_config);
+        server_thread = Some(thread::spawn(move || run_server(server_config)));
+    }
+
+    if let Some(client_thread) = client_thread.take() {
+        client_thread.join().unwrap();
+    }
+    if let Some(server_thread) = server_thread.take() {
+        server_thread.join().unwrap();
     }
 }
