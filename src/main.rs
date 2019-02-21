@@ -1,42 +1,8 @@
-use artillery_only::{self, structs::Map};
-use std::{env, process};
+use artillery_only::{self, Config};
+use std::env;
 
 fn main() {
-    let mut args = env::args().skip(1);
-    let run_as = args.next().unwrap_or_else(|| {
-        println!("Usage: 'artillery-only client/server/both'");
-        process::exit(1);
-    });
-
-    let args: Vec<String> = args.collect();
-
-    println!("Artillery Only Game");
-
-    match run_as.as_ref() {
-        "client" => run_client(&args),
-        "server" => run_server(&args),
-        "both" => {
-            let server_args = args.clone();
-            let server = std::thread::spawn(move || run_server(&server_args));
-            run_client(&args);
-            server.join().unwrap();
-        }
-        _ => {
-            println!("Invalid argument!");
-            process::exit(1);
-        }
-    }
-}
-
-fn run_client(args: &Vec<String>) {
-    artillery_only::run_client(args[0].clone(), args[1].parse().unwrap());
-}
-
-fn run_server(args: &Vec<String>) {
-    let mut map = Map::new(1000, 1000);
-    artillery_only::run_server(
-        args[0].clone(),
-        args[1].parse().unwrap(),
-        args[2].parse().unwrap(),
-    );
+    let args = env::args();
+    let config = Config::new(args).unwrap();
+    artillery_only::run(config);
 }

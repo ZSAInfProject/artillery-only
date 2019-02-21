@@ -1,10 +1,8 @@
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate bincode;
-extern crate enet;
-
-use std::{thread, time};
+use std::env::Args;
+use std::net::Ipv4Addr;
+use std::process;
 
 mod network;
 pub mod structs;
@@ -20,9 +18,13 @@ use self::network::Network;
 use self::network::PeerData;
 use self::structs::Map;
 
+mod config;
+pub use crate::config::{ClientConfig, Config, ServerConfig};
+
 struct Client {
     gl: GlGraphics,
     map: Map,
+    network: Network,
 }
 
 impl Client {
@@ -43,7 +45,7 @@ impl Client {
     }
 }
 
-pub fn run_client(ip: String, port: i32) {
+pub fn run_client(config: ClientConfig) {
     let opengl = OpenGL::V3_2;
 
     let mut window: Window = WindowSettings::new("spinning-square", (512, 512))
@@ -55,6 +57,7 @@ pub fn run_client(ip: String, port: i32) {
     let mut client = Client {
         gl: GlGraphics::new(opengl),
         map: Map::new(512, 512),
+        network: Network::new(false).expect("Creating network for client failed"),
     };
 
     let mut events = Events::new(EventSettings::new());
@@ -66,14 +69,15 @@ pub fn run_client(ip: String, port: i32) {
 }
 
 struct Server {
+    config: ServerConfig,
     map: Map,
     network: Network,
 }
 
 impl Server {
-    fn lobby(&mut self, player_count: i32) {
+    fn lobby(&mut self) {
         let mut count = 0;
-        while count < player_count {
+        while count < self.config.game.player_count {
             let mut msgs = self.network.update();
             while let Some((peer, msg)) = msgs.pop() {
                 match msg {
@@ -89,15 +93,29 @@ impl Server {
     fn recive(&mut self) {}
 }
 
-pub fn run_server(ip: String, port: i32, player_count: i32) {
+pub fn run_server(server_config: ServerConfig) {
     let mut server = Server {
         map: Map::new(512, 512),
         network: Network::new(true).expect("Network for server not created"),
+        config: server_config,
     };
-    server.lobby(player_count);
+    server.lobby();
     loop {
         server.send();
         server.recive();
         server.calculate();
+    }
+}
+
+pub fn run(config: Config) {
+    println!("{:#?}", config);
+
+    let (client, server) = (config.client, config.server);
+
+    if let Some(client_config) = client {
+        run_client(client_config);
+    }
+    if let Some(server_config) = server {
+        run_server(server_config);
     }
 }

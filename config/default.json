@@ -1,0 +1,17 @@
+{
+    "server": {
+        "network": {
+            "host": "127.0.0.1",
+            "port": 1337
+        },
+        "game": {
+            "player_count": 2
+        }
+    },
+    "client": {
+        "network": {
+            "host": "127.0.0.1",
+            "port": 1337
+        }
+    }
+}

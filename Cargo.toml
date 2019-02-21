@@ -9,7 +9,7 @@ name = "artillery_only"
 
 [dependencies]
 enet = "0.2.0"
-serde = { version = "1.0", features = ["unstable"] }
+serde = { version = "1.0" }
 serde_derive = "1.0"
 bincode = "1.0.1"
 bit-vec = "0.5.0"
@@ -17,3 +17,4 @@ pistoncore-glutin_window = "0.51.1"
 piston2d-opengl_graphics = "0.57.0"
 piston = "0.39.0"
 piston2d-graphics = "0.28.0"
+config = "0.9.2"
